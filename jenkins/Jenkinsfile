@@ -3,7 +3,7 @@ pipeline {
    stages {
        stage('git clone') {
            steps {
-               git url: 'main', 'https://github.com/Darshanm416/ecommerce-devops-project.git'
+               git url:'https://github.com/Darshanm416/ecommerce-devops-project.git', git branch: 'main'
            }
        }
        stage('building docker image') {
