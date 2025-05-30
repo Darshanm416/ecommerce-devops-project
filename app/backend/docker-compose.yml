@@ -32,6 +32,14 @@ services:
     networks:
       - ecommerce-net
 
+  frontend:
+    build: ./app/frontend
+    container_name: ecommerce-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
 networks:
   ecommerce-net:
     driver: bridge
