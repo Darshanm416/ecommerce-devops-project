@@ -1,0 +1,22 @@
+# Node
+node_modules/
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+
+# Docker
+*.log
+
+# Jenkins
+secrets/
+
+# OS
+.DS_Store
+
