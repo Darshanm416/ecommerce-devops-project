@@ -1,0 +1,26 @@
+pipeline {
+   agent any 
+   stages {
+       stage('git clone') {
+           steps {
+               git url: 'main', 'https://github.com/Darshanm416/ecommerce-devops-project.git'
+           }
+       }
+       stage('building docker image') {
+           steps {
+               echo "building image...."
+               sh 'docker build -t ecommerce-app'
+           }
+       }
+       stage('tests') {
+           steps {
+              echo 'running tests...'
+           }
+       }
+       stage('success') {
+           steps {
+               echo "CI completed successfully"
+           }
+       }
+   }
+}
