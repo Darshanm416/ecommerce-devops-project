@@ -44,3 +44,12 @@ services:
 networks:
   ecommerce-net:
     driver: bridge
+
+volumes:
+  - mongo-data:/data/db
+  - redis-data:/data
+
+volumes:
+  mongo-data:
+  redis-data:
+
