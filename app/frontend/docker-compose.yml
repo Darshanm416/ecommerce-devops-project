@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: ecommerce-mongo
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+
+  backend:
+    build: ./app/backend
+    container_name: ecommerce-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis
+
+  frontend:
+    build: ./app/frontend
+    container_name: ecommerce-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
