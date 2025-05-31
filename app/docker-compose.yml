@@ -40,6 +40,16 @@ services:
       - "3000:80"
     depends_on:
       - backend
+      
+    nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+
 
 networks:
   ecommerce-net:
