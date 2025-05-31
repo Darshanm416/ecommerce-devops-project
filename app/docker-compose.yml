@@ -38,6 +38,8 @@ services:
     container_name: ecommerce-frontend
     ports:
       - "80"
+    networks:
+      - ecommerce-net
     depends_on:
       - backend
 
@@ -46,6 +48,8 @@ services:
       context: ./nginx
     ports:
       - "80:80"
+    networks:
+      - ecommerce-net
     depends_on:
       - frontend
       - backend
