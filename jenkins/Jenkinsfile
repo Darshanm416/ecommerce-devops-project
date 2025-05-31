@@ -1,26 +1,49 @@
 pipeline {
-   agent any 
-   stages {
-       stage('git clone') {
-           steps {
-               git url:'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
-           }
-       }
-       stage('building docker image') {
-           steps {
-               echo "building image...."
-               sh 'docker build -t ecommerce-app'
-           }
-       }
-       stage('tests') {
-           steps {
-              echo 'running tests...'
-           }
-       }
-       stage('success') {
-           steps {
-               echo "CI completed successfully"
-           }
-       }
-   }
+  agent any
+
+  environment {
+    IMAGE_NAME = "darshanm416/ecommerce-app"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git url:'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
+      }
+    }
+
+    stage('Build Backend Image') {
+      steps {
+        dir('backend') {
+          sh 'docker build -t $IMAGE_NAME-backend .'
+        }
+      }
+    }
+
+    stage('Build Frontend Image') {
+      steps {
+        dir('frontend') {
+          sh 'docker build -t $IMAGE_NAME-frontend .'
+        }
+      }
+    }
+
+    stage('Build NGINX Image') {
+      steps {
+        dir('nginx') {
+          sh 'docker build -t $IMAGE_NAME-nginx . '
+        }
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        withDockerRegistry(credentialsId: 'docker-hub-creds', url: '') {
+          sh 'docker push $IMAGE_NAME-backend'
+          sh 'docker push $IMAGE_NAME-frontend'
+          sh 'docker push $IMAGE_NAME-nginx'
+        }
+      }
+    }
+  }
 }
