@@ -13,6 +13,8 @@ __pycache__/
 
 # Docker
 *.log
+docker-volume/
+coverage/
 
 # Jenkins
 secrets/
