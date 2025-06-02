@@ -5,6 +5,7 @@ module "vpc" {
   private_subnets    = var.private_subnets
   availability_zones = var.availability_zones
   environment        = var.environment
+  cluster_name    = var.cluster_name
 }
 
 module "eks" {
