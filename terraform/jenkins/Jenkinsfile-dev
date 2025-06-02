@@ -22,6 +22,7 @@ pipeline {
             steps {
                 script {
                     echo "DEBUG: Current branch name is: ${env.BRANCH_NAME}"
+                    echo "DEBUG: Parameter BRANCH_TO_BUILD (selected by user): ${params.BRANCH_TO_BUILD}" 
                     // The following line is optional, but can provide more info if BRANCH_NAME isn't working
                     // echo "DEBUG: SCM checkout branch: ${scm.branches[0].name}"
                 }
