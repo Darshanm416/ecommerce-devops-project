@@ -17,6 +17,16 @@ pipeline {
       }
     }
 
+    stage('Debug Branch Name') { // <--- RE-ADDED THIS DEBUG STAGE
+            steps {
+                script {
+                    echo "DEBUG: Current branch name is: ${env.BRANCH_NAME}"
+                    // The following line is optional, but can provide more info if BRANCH_NAME isn't working
+                    // echo "DEBUG: SCM checkout branch: ${scm.branches[0].name}"
+                }
+            }
+    }
+
     stage('Initialize Terraform') {
       steps {
         dir("${params.ENV_DIR}") {
