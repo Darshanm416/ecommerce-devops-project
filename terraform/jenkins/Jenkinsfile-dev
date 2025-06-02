@@ -63,7 +63,7 @@ pipeline {
 
     stage('Terraform Apply') {
       when {
-        branch "${params.BRANCH_TO_BUILD}"
+       expression { params.BRANCH_TO_BUILD.equals('main') }
       }
       steps {
         dir("${params.ENV_DIR}") {
