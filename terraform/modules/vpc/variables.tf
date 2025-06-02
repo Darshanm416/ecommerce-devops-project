@@ -3,3 +3,4 @@ variable "public_subnets" { type = list(string) }
 variable "private_subnets" { type = list(string) }
 variable "availability_zones" { type = list(string) }
 variable "environment" {}
+variable "cluster_name" {}
