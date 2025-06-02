@@ -1,0 +1,63 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_REGION = 'us-east-1' // Change to your region
+    TF_VAR_environment = 'dev'
+  }
+
+  parameters {
+    string(name: 'ENV_DIR', defaultValue: 'terraform/environments/dev', description: 'Terraform environment folder path')
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        git url: 'https://github.com/your-org/ecommerce-devops-project.git', branch: 'main'
+      }
+    }
+
+    stage('Initialize Terraform') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform init'
+        }
+      }
+    }
+
+    stage('Validate Terraform') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform validate'
+        }
+      }
+    }
+
+    stage('Format Check') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform fmt -check'
+        }
+      }
+    }
+
+    stage('Terraform Plan') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform plan -var-file="terraform.tfvars"'
+        }
+      }
+    }
+
+    stage('Terraform Apply') {
+      when {
+        branch 'main'
+      }
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform apply -auto-approve -var-file="terraform.tfvars"'
+        }
+      }
+    }
+  }
+}
