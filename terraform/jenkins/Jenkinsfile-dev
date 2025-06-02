@@ -71,5 +71,12 @@ pipeline {
         }
       }
     }
+    stage('Terraform destroy') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform destroy'
+        }
+      }
+    }
   }
 }
