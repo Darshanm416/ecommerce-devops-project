@@ -1,0 +1,67 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_REGION = 'us-east-1' // Update as needed
+    TF_VAR_environment = 'prod'
+  }
+
+  parameters {
+    string(name: 'ENV_DIR', defaultValue: 'environments/prod', description: 'Terraform prod environment folder')
+  }
+
+  stages {
+    stage('Checkout Code') {
+      steps {
+        git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
+      }
+    }
+
+    stage('Terraform Init') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform init'
+        }
+      }
+    }
+
+    stage('Terraform Validate') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform validate'
+        }
+      }
+    }
+
+    stage('Terraform Format Check') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform fmt -check'
+        }
+      }
+    }
+
+    stage('Terraform Plan') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform plan -var-file="terraform.tfvars" -out=tfplan.out'
+        }
+      }
+    }
+
+    stage('Manual Approval') {
+      steps {
+        timeout(time: 10, unit: 'MINUTES') {
+          input message: 'Approve production infrastructure changes?'
+        }
+      }
+    }
+
+    stage('Terraform Apply') {
+      steps {
+        dir("${params.ENV_DIR}") {
+          sh 'terraform apply tfplan.out'
+        }
+      }
+    }
+  }
