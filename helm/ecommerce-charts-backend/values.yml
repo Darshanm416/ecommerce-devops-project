@@ -1,0 +1,15 @@
+replicaCount: 2
+
+image:
+  repository: darshanm416/ecommerce-app-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5000
+
+env:
+  MONGO_URL: "mongodb://mongodb-service:27017/ecommerce"
+
+resources: {}
