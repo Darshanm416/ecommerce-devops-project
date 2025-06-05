@@ -8,9 +8,9 @@ variable "jenkins_vpc_id" {
   type        = string
 }
 
-variable "eks_route_table_id" {
+variable "eks_route_table_ids" {
   description = "Route Table ID of EKS VPC"
-  type        = string
+  type        = list(string)
 }
 
 variable "jenkins_route_table_id" {
@@ -30,5 +30,10 @@ variable "jenkins_vpc_cidr" {
 
 variable "environment" {
   description = "Environment name"
+  type        = string
+}
+
+variable "eks_cluster_security_group_id" {
+  description = "The ID of the EKS cluster's primary security group."
   type        = string
 }
