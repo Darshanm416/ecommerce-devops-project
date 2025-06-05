@@ -71,12 +71,5 @@ pipeline {
         }
       }
     }
-    // stage('Terraform destroy') {
-    //   steps {
-    //     dir("${params.ENV_DIR}") {
-    //       sh 'terraform destroy -auto-approve -var-file="terraform.tfvars"'
-    //     }
-    //   }
-    // }
   }
 }
