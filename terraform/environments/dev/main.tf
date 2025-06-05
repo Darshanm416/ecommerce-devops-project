@@ -107,8 +107,6 @@ resource "kubernetes_config_map_v1" "aws_auth" {
     mapUsers = jsonencode([]) 
   }
 
-  # Ensure this ConfigMap is created only after the EKS cluster is fully provisioned.
-  depends_on = [module.eks]
 }
 
 # --- VPC Peering Module ---
