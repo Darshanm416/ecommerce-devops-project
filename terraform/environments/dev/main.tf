@@ -54,14 +54,14 @@ module "eks" {
 
 
 module "vpc_peering" {
-  source                  = "../../modules/vpc-peering"
-  eks_vpc_id              = module.vpc.vpc_id
-  jenkins_vpc_id          = var.jenkins_vpc_id
-  eks_route_table_id      = module.vpc.private_route_table_id
-  jenkins_route_table_id  = var.jenkins_route_table_id
-  eks_vpc_cidr            = var.vpc_cidr
-  jenkins_vpc_cidr        = var.jenkins_vpc_cidr
-  environment             = var.environment
+  source                 = "../../modules/vpc-peering"
+  eks_vpc_id             = module.vpc.vpc_id
+  jenkins_vpc_id         = var.jenkins_vpc_id
+  eks_route_table_id     = module.vpc.private_route_table_id
+  jenkins_route_table_id = var.jenkins_route_table_id
+  eks_vpc_cidr           = var.vpc_cidr
+  jenkins_vpc_cidr       = var.jenkins_vpc_cidr
+  environment            = var.environment
 }
 
 

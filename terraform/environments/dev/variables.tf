@@ -23,11 +23,11 @@ variable "jenkins_vpc_cidr" {
 variable "account_id" {
   description = "Your AWS account ID."
   type        = string
-   # default = "160885263644" # Example
+  # default = "160885263644" # Example
 }
 
 variable "aws_region" {
   description = "AWS region for the deployment."
   type        = string
-#   default     = "us-east-1" # Match your provider region
+  #   default     = "us-east-1" # Match your provider region
 }
