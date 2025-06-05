@@ -5,3 +5,6 @@ availability_zones = ["us-east-1a", "us-east-1b"]
 cluster_name       = "ecommerce-dev-eks"
 cluster_version    = "1.29"
 environment        = "dev"
+jenkins_vpc_id         = "vpc-0afac25e9d5f745d9"        # Replace with actual Jenkins VPC ID
+jenkins_route_table_id = "rtb-093a928b7cbf05ed0"        # Replace with actual Jenkins route table ID
+jenkins_vpc_cidr       = "172.31.0.0/16"         # Replace with actual Jenkins VPC CIDR block
