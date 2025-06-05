@@ -18,3 +18,8 @@ output "eks_managed_node_groups_default_iam_role_arn" {
   # This path is correct as it refers to the output of the inner module call
   value       = module.eks_cluster_core.eks_managed_node_groups["default"].iam_role_arn
 }
+
+output "cluster_security_group_id" {
+  description = "The ID of the EKS cluster's primary security group."
+  value       = module.eks_cluster_core.cluster_security_group_id # This output comes from the official EKS module
+}
