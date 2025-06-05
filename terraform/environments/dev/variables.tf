@@ -19,3 +19,15 @@ variable "jenkins_vpc_cidr" {
   description = "CIDR block of Jenkins VPC"
   type        = string
 }
+
+variable "account_id" {
+  description = "Your AWS account ID."
+  type        = string
+   # default = "160885263644" # Example
+}
+
+variable "aws_region" {
+  description = "AWS region for the deployment."
+  type        = string
+#   default     = "us-east-1" # Match your provider region
+}
