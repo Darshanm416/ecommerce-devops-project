@@ -50,7 +50,16 @@ module "eks" {
   vpc_id          = module.vpc.vpc_id
   private_subnets = module.vpc.private_subnets
   environment     = var.environment
+
+  map_roles = [
+    {
+      rolearn  = "arn:aws:iam::160885263644:role/jenkins-admin-role" # <--- REPLACE WITH YOUR ACTUAL JENKINS SERVER'S IAM ROLE ARN
+      username = "jenkins-eks-admin"
+      groups   = ["system:masters"]
+    }
+  ]
 }
+
 
 module "vpc_peering" {
   source                  = "../../modules/vpc-peering"
