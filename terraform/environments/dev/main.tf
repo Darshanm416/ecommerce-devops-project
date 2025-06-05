@@ -69,7 +69,6 @@ provider "kubernetes" {
   }
 
   # Ensure the Kubernetes provider configures ONLY after the EKS cluster is created.
-  depends_on = [module.eks]
 }
 
 # --- AWS Auth ConfigMap for Jenkins Admin Access ---
@@ -105,8 +104,9 @@ resource "kubernetes_config_map_v1" "aws_auth" {
     ])
     # mapUsers: (Optional) You can add IAM Users here if needed, but the role is preferred.
     mapUsers = jsonencode([]) 
+    
   }
-
+  depends_on = [module.eks]
 }
 
 # --- VPC Peering Module ---
