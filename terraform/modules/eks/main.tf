@@ -18,14 +18,6 @@ module "eks_cluster_core" {
     }
   }
 
-  map_roles = [
-    {
-      rolearn  = "arn:aws:iam::160885263644:role/jenkins-admin-role" # <--- REPLACE WITH YOUR ACTUAL JENKINS SERVER'S IAM ROLE ARN
-      username = "jenkins-eks-admin"
-      groups   = ["system:masters"]
-    }
-  ]
-
   tags = {
     Environment = var.environment
     Terraform   = "true"
