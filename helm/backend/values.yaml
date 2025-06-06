@@ -13,8 +13,8 @@ mongodb:
   image:
     repository: mongo
     tag: "6"
-    port: 27017
-
+  port: 27017
+  
 redis:
   image: redis
   tag: "7"
