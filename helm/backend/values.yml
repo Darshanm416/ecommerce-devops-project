@@ -1,21 +1,10 @@
-replicaCount: 1 # Default replica count
+replicaCount: 2
 
 image:
-  repository: "" # Placeholder, overridden by Terraform
-  tag: ""        # Placeholder, overridden by Terraform
+  repository: darshanm416/ecommerce-app-backend # e.g. 1234567890.dkr.ecr.us-east-1.amazonaws.com/sears-backend
+  tag: "latest"
   pullPolicy: IfNotPresent
 
-service:
-  type: ClusterIP # Default service type
-  port: 5000 # Default backend service port
+containerPort: 3000
 
-env: {} # Default environment variables, overridden by Terraform
-
-ingress:
-  enabled: true # Default, overridden by Terraform
-  className: "" # Placeholder, overridden by Terraform (e.g., "alb")
-  annotations: {} # Placeholder, overridden by Terraform
-  hosts: []       # Placeholder, overridden by Terraform
-  tls: []         # Placeholder, overridden by Terraform
-
-resources: {} # Default, no specific resource requests/limits
+resources: {}
