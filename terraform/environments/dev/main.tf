@@ -85,12 +85,17 @@ resource "kubernetes_config_map_v1" "aws_auth" {
 
 
 # --- UPDATED: AWS Load Balancer Controller Module ---
-# Using direct Git source to bypass registry parsing issues for this module name.
+# Trying a direct Git source with a different tag or branch name.
 module "aws_load_balancer_controller" {
-  # Direct Git source pointing to the specific sub-directory in the module's repository.
-  # This targets version 1.5.0 which is known to be stable.
-  source  = "git::https://github.com/terraform-aws-modules/terraform-aws-alb.git//modules/aws-load-balancer-controller?ref=v1.5.0"
-  # Note: 'version' argument is not used with Git sources. The 'ref' argument specifies the version.
+  # OPTION 1 (Recommended): Use a more recent, valid tag if one exists.
+  # Check https://github.com/terraform-aws-modules/terraform-aws-alb/tags for latest 'v' tags
+  source  = "git::https://github.com/terraform-aws-modules/terraform-aws-alb.git//modules/aws-load-balancer-controller?ref=v1.8.0" # Trying v1.8.0
+
+  # OPTION 2 (Fallback): Use the 'main' branch if tags are problematic.
+  # source  = "git::https://github.com/terraform-aws-modules/terraform-aws-alb.git//modules/aws-load-balancer-controller?ref=main"
+
+  # Note: 'version' argument is NOT used with Git sources. The 'ref' argument specifies the version.
+  # version = "~> 1.0" # REMOVE THIS LINE IF USING GIT SOURCE
 
   cluster_name                   = module.eks.cluster_name
   cluster_endpoint               = module.eks.cluster_endpoint
