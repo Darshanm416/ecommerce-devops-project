@@ -7,13 +7,13 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
+    stage('Checkout Source Code') {
       steps {
         git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
       }
     }
 
-    stage('Deploy Backend with Helm') {
+    stage('Deploy Backend (includes MongoDB & Redis)') {
       steps {
         sh '''
           helm upgrade --install backend ./helm/backend \
@@ -23,10 +23,19 @@ pipeline {
       }
     }
 
-    stage('Deploy Frontend with Helm') {
+    stage('Deploy Frontend') {
       steps {
         sh '''
           helm upgrade --install frontend ./helm/frontend \
+            --namespace $NAMESPACE
+        '''
+      }
+    }
+
+    stage('Deploy Nginx') {
+      steps {
+        sh '''
+          helm upgrade --install nginx ./helm/nginx \
             --namespace $NAMESPACE
         '''
       }
@@ -36,10 +45,10 @@ pipeline {
 
   post {
     success {
-      echo "✅ Helm deployment to EKS was successful!"
+      echo "✅ All components deployed to EKS in namespace '$NAMESPACE'"
     }
     failure {
-      echo "❌ Helm deployment to EKS failed. Check logs."
+      echo "❌ Deployment failed. Please check the logs and Helm templates."
     }
   }
 }
