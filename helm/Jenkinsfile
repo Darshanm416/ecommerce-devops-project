@@ -1,0 +1,45 @@
+pipeline {
+  agent any
+
+  environment {
+    NAMESPACE = "sears"
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
+      }
+    }
+
+    stage('Deploy Backend with Helm') {
+      steps {
+        sh '''
+          helm upgrade --install backend ./backend \
+            --namespace $NAMESPACE \
+            --create-namespace
+        '''
+      }
+    }
+
+    stage('Deploy Frontend with Helm') {
+      steps {
+        sh '''
+          helm upgrade --install frontend ./frontend \
+            --namespace $NAMESPACE
+        '''
+      }
+    }
+
+  }
+
+  post {
+    success {
+      echo "✅ Helm deployment to EKS was successful!"
+    }
+    failure {
+      echo "❌ Helm deployment to EKS failed. Check logs."
+    }
+  }
+}
