@@ -11,9 +11,15 @@ output "private_subnet_ids" {
 }
 
 output "private_route_table_ids" {
-  value = [for rt in aws_route_table.private_rt : rt.id]
+  description = "List of private route table IDs."
+  # Since aws_route_table.private_rt is a single resource, access its ID directly
+  # and wrap it in a list to match the `list(string)` type expected by the peering module.
+  value = [aws_route_table.private_rt.id]
 }
 
 output "public_route_table_ids" {
-  value = [for rt in aws_route_table.public_rt : rt.id]
+  description = "List of public route table IDs."
+  # Since aws_route_table.public_rt is a single resource, access its ID directly
+  # and wrap it in a list to match the `list(string)` type expected by the peering module.
+  value = [aws_route_table.public_rt.id]
 }
