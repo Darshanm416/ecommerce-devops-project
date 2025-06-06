@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: darshanm416/ecommerce-app-frontend # e.g. 1234567890.dkr.ecr.us-east-1.amazonaws.com/sears-frontend
-  tag: "latest"
+  tag: v2
   pullPolicy: IfNotPresent
 
 containerPort: 80

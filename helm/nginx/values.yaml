@@ -1,0 +1,11 @@
+image:
+  repository: darshanm416/ecommerce-app-nginx
+  tag: v2
+  pullPolicy: Always
+
+containerPort: 80
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 80
