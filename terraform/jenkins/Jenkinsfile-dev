@@ -9,7 +9,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'ENV_DIR', defaultValue: 'environments/dev', description: 'Terraform environment folder path')
+        string(name: 'ENV_DIR', defaultValue: 'terraform/environments/dev', description: 'Terraform environment folder path')
         string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
         string(name: 'APP_IMAGE_TAG', defaultValue: "${env.BUILD_NUMBER}", description: 'Docker image tag for applications')
     }
