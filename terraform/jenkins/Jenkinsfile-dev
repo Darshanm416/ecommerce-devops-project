@@ -1,35 +1,29 @@
-
+// Jenkinsfile
 
 pipeline {
-    agent any 
+    agent any
 
     environment {
-       
-        ECR_REPO_ACCOUNT_ID = "160885263644" 
-        AWS_REGION = "us-east-1" 
+        ECR_REPO_ACCOUNT_ID = "160885263644" // REPLACE with your AWS Account ID
+        AWS_REGION = "us-east-1" // REPLACE with your AWS Region
     }
 
     parameters {
-        
         string(name: 'ENV_DIR', defaultValue: 'environments/dev', description: 'Terraform environment folder path')
         string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
         string(name: 'APP_IMAGE_TAG', defaultValue: "${env.BUILD_NUMBER}", description: 'Docker image tag for applications')
     }
 
     stages {
-       
         stage('Checkout Code') {
             steps {
-              
-                git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: "${params.BRANCH_TO_BUILD}"
+                git credentialsId: 'your-actual-github-pat-jenkins-id', url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: "${params.BRANCH_TO_BUILD}"
             }
         }
 
-       
         stage('Debug Branch Name') {
             steps {
                 script {
-                    
                     echo "DEBUG: Current branch name (from env.BRANCH_NAME): ${env.BRANCH_NAME}"
                     echo "DEBUG: Parameter BRANCH_TO_BUILD (selected by user): ${params.BRANCH_TO_BUILD}"
                 }
@@ -38,9 +32,7 @@ pipeline {
 
         stage('Initialize Terraform') {
             steps {
-               
                 dir("${params.ENV_DIR}") {
-                  
                     sh 'terraform init -upgrade'
                 }
             }
@@ -49,7 +41,6 @@ pipeline {
         stage('Validate Terraform') {
             steps {
                 dir("${params.ENV_DIR}") {
-                    
                     sh 'terraform validate'
                 }
             }
@@ -58,47 +49,56 @@ pipeline {
         stage('Format Check') {
             steps {
                 dir("${params.ENV_DIR}") {
-                    
                     sh 'terraform fmt -check'
                 }
             }
         }
 
+        // --- NEW DEBUG STAGE FOR TFVARS ---
+        stage('Debug terraform.tfvars') {
+            steps {
+                dir("${params.ENV_DIR}") {
+                    script {
+                        echo "--- Contents of ${params.ENV_DIR} ---"
+                        sh 'ls -al' // List all files and permissions
+                        echo "--- End of directory listing ---"
+
+                        echo "--- Checking terraform.tfvars file ---"
+                        sh 'file terraform.tfvars' // Checks file type/encoding
+                        sh 'cat terraform.tfvars'  // Prints file content (CAUTION: sensitive data if any)
+                        echo "--- End of terraform.tfvars content ---"
+                    }
+                }
+            }
+        }
+        // --- END NEW DEBUG STAGE ---
+
         stage('Terraform Plan') {
             steps {
                 dir("${params.ENV_DIR}") {
-                    
                     sh 'terraform plan -out=tfplan.out -var-file="terraform.tfvars"'
                 }
             }
         }
 
         stage('Terraform Apply') {
-            
             when {
-               
                 expression { params.BRANCH_TO_BUILD.equals('main') }
             }
             steps {
                 dir("${params.ENV_DIR}") {
-                   
                     sh 'terraform apply -auto-approve tfplan.out'
                 }
             }
         }
-     
     }
 
-    
     post {
         success {
-            
             echo '✅ Pipeline finished successfully! Infrastructure provisioned and applications deployed.'
         }
         failure {
-            
             echo '❌ Pipeline failed. Check logs for details.'
-            
         }
     }
 }
