@@ -2,9 +2,20 @@ replicaCount: 2
 
 image:
   repository: darshanm416/ecommerce-app-backend # e.g. 1234567890.dkr.ecr.us-east-1.amazonaws.com/sears-backend
-  tag: "latest"
+  tag: v2
   pullPolicy: IfNotPresent
 
 containerPort: 5000
 
 resources: {}
+
+mongodb:
+  image:
+    repository: mongo
+    tag: "6"
+    port: 27017
+
+redis:
+  image: redis
+  tag: "7"
+  port: 6379
