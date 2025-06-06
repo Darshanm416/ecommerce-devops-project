@@ -16,7 +16,7 @@ pipeline {
     stage('Deploy Backend with Helm') {
       steps {
         sh '''
-          helm upgrade --install backend ./backend \
+          helm upgrade --install backend ./helm/backend \
             --namespace $NAMESPACE \
             --create-namespace
         '''
@@ -26,7 +26,7 @@ pipeline {
     stage('Deploy Frontend with Helm') {
       steps {
         sh '''
-          helm upgrade --install frontend ./frontend \
+          helm upgrade --install frontend ./helm/frontend \
             --namespace $NAMESPACE
         '''
       }
