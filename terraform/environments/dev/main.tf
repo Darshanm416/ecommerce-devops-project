@@ -2,8 +2,9 @@ module "vpc" {
   source              = "../../modules/vpc"
   project             = var.project
   vpc_cidr            = var.vpc_cidr
-  public_subnet       = var.public_subnet
-  private_subnet      = var.private_subnet
+  public_subnets      = var.public_subnet
+  private_subnets     = var.private_subnet
+  availability_zones  = var.availability_zones
 }
 
 module "eks" {
