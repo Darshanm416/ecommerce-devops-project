@@ -1,75 +1,99 @@
+// Jenkinsfile
+
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    AWS_REGION = 'us-east-1' // Change to your region
-    TF_VAR_environment = 'dev'
-  }
-
-  parameters {
-    string(name: 'ENV_DIR', defaultValue: 'terraform/environments/dev', description: 'Terraform environment folder path')
-    string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
-  }
-
-  stages {
-    stage('Checkout Code') {
-      steps {
-        git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
-      }
+    environment {
+        # AWS_REGION is defined by the 'aws_region' variable in environments/dev/terraform.tfvars
+        # Jenkins will implicitly use the EC2 Instance Profile (IAM Role) attached to the agent
+        # ECR_REPO_ACCOUNT_ID and AWS_REGION are no longer strictly needed in environment for Docker builds,
+        # but kept if other AWS CLI commands might use them implicitly.
+        ECR_REPO_ACCOUNT_ID = "160885263644" // Your AWS Account ID
+        AWS_REGION = "us-east-1" // Your AWS Region
     }
 
-    stage('Debug Branch Name') { // <--- RE-ADDED THIS DEBUG STAGE
+    parameters {
+        string(name: 'ENV_DIR', defaultValue: 'environments/dev', description: 'Terraform environment folder path')
+        string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
+        # APP_IMAGE_TAG is still useful as Terraform will pass it to Helm charts (e.g., your_app:BUILD_NUMBER)
+        string(name: 'APP_IMAGE_TAG', defaultValue: "${env.BUILD_NUMBER}", description: 'Docker image tag for applications')
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                # REPLACE 'your-actual-github-pat-jenkins-id' with the ID of your Jenkins credential for GitHub
+                git credentialsId: 'your-actual-github-pat-jenkins-id', url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: "${params.BRANCH_TO_BUILD}"
+            }
+        }
+
+        stage('Debug Branch Name') {
             steps {
                 script {
-                    echo "DEBUG: Current branch name is: ${env.BRANCH_NAME}"
-                    echo "DEBUG: Parameter BRANCH_TO_BUILD (selected by user): ${params.BRANCH_TO_BUILD}" 
-                    // The following line is optional, but can provide more info if BRANCH_NAME isn't working
-                    // echo "DEBUG: SCM checkout branch: ${scm.branches[0].name}"
+                    echo "DEBUG: Current branch name (from env.BRANCH_NAME): ${env.BRANCH_NAME}"
+                    echo "DEBUG: Parameter BRANCH_TO_BUILD (selected by user): ${params.BRANCH_TO_BUILD}"
                 }
             }
+        }
+
+        # --- Terraform Stages (Provision Infrastructure & Deploy Apps) ---
+        stage('Initialize Terraform') {
+            steps {
+                dir("${params.ENV_DIR}") {
+                    sh 'terraform init -upgrade' # Use -upgrade to ensure module versions are refreshed
+                }
+            }
+        }
+
+        stage('Validate Terraform') {
+            steps {
+                dir("${params.ENV_DIR}") {
+                    sh 'terraform validate'
+                }
+            }
+        }
+
+        stage('Format Check') {
+            steps {
+                dir("${params.ENV_DIR}") {
+                    sh 'terraform fmt -check'
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir("${params.ENV_DIR}") {
+                    # Plan to a file for review/apply consistency
+                    sh 'terraform plan -out=tfplan.out -var-file="terraform.tfvars"'
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            when {
+                # This ensures apply only runs if 'main' branch is selected (or whatever is in BRANCH_TO_BUILD)
+                expression { params.BRANCH_TO_BUILD.equals('main') }
+            }
+            steps {
+                dir("${params.ENV_DIR}") {
+                    # Apply the saved plan
+                    sh 'terraform apply -auto-approve tfplan.out'
+                }
+            }
+        }
+        # --- END OF TERRAFORM STAGES ---
+
+        # Docker Image Build & Push Stages (REMOVED as they are handled by a separate CI pipeline)
     }
 
-    stage('Initialize Terraform') {
-      steps {
-        dir("${params.ENV_DIR}") {
-          sh 'terraform init'
+    post {
+        success {
+            echo '✅ Pipeline finished successfully! Infrastructure provisioned and applications deployed.'
         }
-      }
-    }
-
-    stage('Validate Terraform') {
-      steps {
-        dir("${params.ENV_DIR}") {
-          sh 'terraform validate'
+        failure {
+            echo '❌ Pipeline failed. Check logs for details.'
+            # Add email/Slack notification logic here
         }
-      }
     }
-
-    stage('Format Check') {
-      steps {
-        dir("${params.ENV_DIR}") {
-          sh 'terraform fmt -check'
-        }
-      }
-    }
-
-    stage('Terraform Plan') {
-      steps {
-        dir("${params.ENV_DIR}") {
-          sh 'terraform plan -var-file="terraform.tfvars"'
-        }
-      }
-    }
-
-    stage('Terraform Apply') {
-      when {
-       expression { params.BRANCH_TO_BUILD.equals('main') }
-      }
-      steps {
-        dir("${params.ENV_DIR}") {
-          sh 'terraform apply -auto-approve -var-file="terraform.tfvars"'
-        }
-      }
-    }
-  }
 }
