@@ -4,10 +4,8 @@ pipeline {
     agent any
 
     environment {
-        # AWS_REGION is defined by the 'aws_region' variable in environments/dev/terraform.tfvars
-        # Jenkins will implicitly use the EC2 Instance Profile (IAM Role) attached to the agent
-        # ECR_REPO_ACCOUNT_ID and AWS_REGION are no longer strictly needed in environment for Docker builds,
-        # but kept if other AWS CLI commands might use them implicitly.
+        // These lines were the source of the previous error.
+        // Groovy declarative pipelines can be strict about comments in certain blocks.
         ECR_REPO_ACCOUNT_ID = "160885263644" // Your AWS Account ID
         AWS_REGION = "us-east-1" // Your AWS Region
     }
@@ -15,14 +13,14 @@ pipeline {
     parameters {
         string(name: 'ENV_DIR', defaultValue: 'environments/dev', description: 'Terraform environment folder path')
         string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
-        # APP_IMAGE_TAG is still useful as Terraform will pass it to Helm charts (e.g., your_app:BUILD_NUMBER)
+        // APP_IMAGE_TAG is still useful as Terraform will pass it to Helm charts (e.g., your_app:BUILD_NUMBER)
         string(name: 'APP_IMAGE_TAG', defaultValue: "${env.BUILD_NUMBER}", description: 'Docker image tag for applications')
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                # REPLACE 'your-actual-github-pat-jenkins-id' with the ID of your Jenkins credential for GitHub
+                // REPLACE 'your-actual-github-pat-jenkins-id' with the ID of your Jenkins credential for GitHub
                 git credentialsId: 'your-actual-github-pat-jenkins-id', url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: "${params.BRANCH_TO_BUILD}"
             }
         }
@@ -40,7 +38,7 @@ pipeline {
         stage('Initialize Terraform') {
             steps {
                 dir("${params.ENV_DIR}") {
-                    sh 'terraform init -upgrade' # Use -upgrade to ensure module versions are refreshed
+                    sh 'terraform init -upgrade' // Use -upgrade to ensure module versions are refreshed
                 }
             }
         }
@@ -82,9 +80,9 @@ pipeline {
                 }
             }
         }
-        # --- END OF TERRAFORM STAGES ---
+        // --- END OF TERRAFORM STAGES ---
 
-        # Docker Image Build & Push Stages (REMOVED as they are handled by a separate CI pipeline)
+        // Docker Image Build & Push Stages (REMOVED as they are handled by a separate CI pipeline)
     }
 
     post {
@@ -93,7 +91,7 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline failed. Check logs for details.'
-            # Add email/Slack notification logic here
+            // Add email/Slack notification logic here
         }
     }
 }
