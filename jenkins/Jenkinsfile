@@ -14,28 +14,28 @@ pipeline {
 
     stage('Build Backend Image') {
       steps {
-        sh 'docker build -t $IMAGE_NAME-backend app/backend/. '
+        sh 'docker build -t $IMAGE_NAME-backend:v2 app/backend/. '
       }
     }
 
     stage('Build Frontend Image') {
       steps {
-        sh 'docker build -t $IMAGE_NAME-frontend app/frontend/. ' 
+        sh 'docker build -t $IMAGE_NAME-frontend:v2 app/frontend/. ' 
       }
     }
 
     stage('Build NGINX Image') {
       steps {
-        sh 'docker build -t $IMAGE_NAME-nginx app/nginx/. '
+        sh 'docker build -t $IMAGE_NAME-nginx:v2 app/nginx/. '
       }
     }
 
     stage('Push to Docker Hub') {
       steps {
         withDockerRegistry(credentialsId: 'docker-hub-creds', url: '') {
-          sh 'docker push $IMAGE_NAME-backend'
-          sh 'docker push $IMAGE_NAME-frontend'
-          sh 'docker push $IMAGE_NAME-nginx'
+          sh 'docker push $IMAGE_NAME-backend:v2'
+          sh 'docker push $IMAGE_NAME-frontend:v2'
+          sh 'docker push $IMAGE_NAME-nginx:v2'
         }
       }
     }
