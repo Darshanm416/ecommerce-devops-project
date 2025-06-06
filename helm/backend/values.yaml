@@ -1,0 +1,10 @@
+replicaCount: 2
+
+image:
+  repository: darshanm416/ecommerce-app-backend # e.g. 1234567890.dkr.ecr.us-east-1.amazonaws.com/sears-backend
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+containerPort: 3000
+
+resources: {}
