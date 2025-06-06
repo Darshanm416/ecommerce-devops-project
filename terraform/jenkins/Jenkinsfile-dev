@@ -1,104 +1,79 @@
-// Jenkinsfile
-
 pipeline {
     agent any
 
     environment {
-        ECR_REPO_ACCOUNT_ID = "160885263644" // REPLACE with your AWS Account ID
-        AWS_REGION = "us-east-1" // REPLACE with your AWS Region
+        TF_WORKDIR = "terraform/environments/dev"
+        TF_VAR_FILE = "terraform.tfvars"
     }
 
-    parameters {
-        string(name: 'ENV_DIR', defaultValue: 'terraform/environments/dev', description: 'Terraform environment folder path')
-        string(name: 'BRANCH_TO_BUILD', defaultValue: 'main', description: 'Git branch to build and apply Terraform changes from')
-        string(name: 'APP_IMAGE_TAG', defaultValue: "${env.BUILD_NUMBER}", description: 'Docker image tag for applications')
+    options {
+        timestamps()
+        ansiColor('xterm')
     }
 
     stages {
-        stage('Checkout Code') {
+
+        stage('Checkout') {
             steps {
-                git credentialsId: 'your-actual-github-pat-jenkins-id', url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: "${params.BRANCH_TO_BUILD}"
+                echo "📦 Checking out source code..."
+                checkout scm
             }
         }
 
-        stage('Debug Branch Name') {
+        stage('Terraform Init') {
             steps {
-                script {
-                    echo "DEBUG: Current branch name (from env.BRANCH_NAME): ${env.BRANCH_NAME}"
-                    echo "DEBUG: Parameter BRANCH_TO_BUILD (selected by user): ${params.BRANCH_TO_BUILD}"
+                dir("${TF_WORKDIR}") {
+                    echo "🚀 Running terraform init..."
+                    sh 'terraform init'
                 }
             }
         }
 
-        stage('Initialize Terraform') {
+        stage('Terraform Validate') {
             steps {
-                dir("${params.ENV_DIR}") {
-                    sh 'terraform init -upgrade'
-                }
-            }
-        }
-
-        stage('Validate Terraform') {
-            steps {
-                dir("${params.ENV_DIR}") {
+                dir("${TF_WORKDIR}") {
+                    echo "🔍 Validating Terraform code..."
                     sh 'terraform validate'
                 }
             }
         }
 
-        stage('Format Check') {
-            steps {
-                dir("${params.ENV_DIR}") {
-                    sh 'terraform fmt -check'
-                }
-            }
-        }
-
-        // --- NEW DEBUG STAGE FOR TFVARS ---
-        stage('Debug terraform.tfvars') {
-            steps {
-                dir("${params.ENV_DIR}") {
-                    script {
-                        echo "--- Contents of ${params.ENV_DIR} ---"
-                        sh 'ls -al' // List all files and permissions
-                        echo "--- End of directory listing ---"
-
-                        echo "--- Checking terraform.tfvars file ---"
-                        sh 'file terraform.tfvars' // Checks file type/encoding
-                        sh 'cat terraform.tfvars'  // Prints file content (CAUTION: sensitive data if any)
-                        echo "--- End of terraform.tfvars content ---"
-                    }
-                }
-            }
-        }
-        // --- END NEW DEBUG STAGE ---
-
         stage('Terraform Plan') {
             steps {
-                dir("${params.ENV_DIR}") {
-                    sh 'terraform plan -out=tfplan.out -var-file="terraform.tfvars"'
+                dir("${TF_WORKDIR}") {
+                    echo "📄 Planning Terraform changes..."
+                    sh "terraform plan -var-file=${TF_VAR_FILE}"
                 }
             }
         }
 
         stage('Terraform Apply') {
             when {
-                expression { params.BRANCH_TO_BUILD.equals('main') }
+                expression { return params.APPLY_CHANGES == true }
             }
             steps {
-                dir("${params.ENV_DIR}") {
-                    sh 'terraform apply -auto-approve tfplan.out'
+                dir("${TF_WORKDIR}") {
+                    echo "✅ Applying Terraform changes..."
+                    sh "terraform apply -auto-approve -var-file=${TF_VAR_FILE}"
                 }
             }
         }
     }
 
+    parameters {
+        booleanParam(
+            name: 'APPLY_CHANGES',
+            defaultValue: false,
+            description: 'Check to apply Terraform changes (dangerous in prod!)'
+        )
+    }
+
     post {
-        success {
-            echo '✅ Pipeline finished successfully! Infrastructure provisioned and applications deployed.'
-        }
         failure {
-            echo '❌ Pipeline failed. Check logs for details.'
+            echo "🔥 Terraform job failed"
+        }
+        success {
+            echo "✅ Terraform job completed successfully"
         }
     }
 }
