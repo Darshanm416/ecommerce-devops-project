@@ -87,7 +87,8 @@ resource "kubernetes_config_map_v1" "aws_auth" {
 # --- UPDATED: AWS Load Balancer Controller Module ---
 # Corrected source to "terraform-aws-modules/alb/aws-load-balancer-controller"
 module "aws_load_balancer_controller" {
-  source  = "terraform-aws-modules/alb/aws-load-balancer-controller" # CORRECTED SOURCE HERE!
+  # CORRECTED SOURCE HERE: "terraform-aws-modules/alb/aws-load-balancer-controller"
+  source  = "terraform-aws-modules/alb/aws-load-balancer-controller"
   version = "~> 1.0" # Specify a stable version, e.g., "~> 1.0" or "1.5.0"
 
   cluster_name                   = module.eks.cluster_name
