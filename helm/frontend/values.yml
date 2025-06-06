@@ -7,9 +7,7 @@ image:
 
 service:
   type: ClusterIP # Default service type
-  port: 5000 # Default backend service port
-
-env: {} # Default environment variables, overridden by Terraform
+  port: 80 # Default frontend service port
 
 ingress:
   enabled: true # Default, overridden by Terraform

@@ -1,5 +1,10 @@
+# modules/vpc/main.tf
+
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
+
+  enable_dns_hostnames = true # Recommended for EKS
+  enable_dns_support   = true # Recommended for EKS
 
   tags = {
     Name        = "${var.environment}-vpc"
@@ -15,27 +20,25 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+resource "aws_eip" "nat" {
+  domain = "vpc" # Corrected from 'vpc = true'
+}
+
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
+  subnet_id     = aws_subnet.public[0].id # Place NAT Gateway in the first public subnet
 
   tags = {
     Name = "${var.environment}-nat"
   }
 }
 
-resource "aws_eip" "nat" {
-  vpc = true
-}
-
-# Add this to your modules/vpc/main.tf
-
 resource "aws_route_table" "private" {
-  count  = length(var.private_subnets) # One route table per private subnet for better isolation
+  count  = length(var.private_subnets)
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat.id
   }
 
@@ -51,9 +54,8 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-# Optional: Route table for public subnets (if not already handled)
 resource "aws_route_table" "public" {
-  count = length(var.public_subnets)
+  count  = length(var.public_subnets)
   vpc_id = aws_vpc.main.id
 
   route {
@@ -68,7 +70,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = length(var.public_subnets)
+  count          = length(var.public_subnets)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public[count.index].id
 }
@@ -78,12 +80,12 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnets[count.index]
   availability_zone       = element(var.availability_zones, count.index)
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = true # Public subnets should have public IPs
 
   tags = {
-    Name = "${var.environment}-public-${count.index + 1}"
-    "kubernetes.io/role/elb"           = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name                                = "${var.environment}-public-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared" # For EKS subnet discovery
+    "kubernetes.io/role/elb"            = "1"                # For ALB Controller to discover public subnets
   }
 }
 
@@ -94,8 +96,8 @@ resource "aws_subnet" "private" {
   availability_zone = element(var.availability_zones, count.index)
 
   tags = {
-    Name = "${var.environment}-private-${count.index + 1}"
-    "kubernetes.io/role/internal-elb"            = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name                                = "${var.environment}-private-${count.index + 1}"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared" # For EKS subnet discovery
+    "kubernetes.io/role/internal-elb"   = "1"                # For Internal ALB Controller to discover private subnets
   }
 }
