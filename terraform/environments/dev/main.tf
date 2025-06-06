@@ -58,9 +58,9 @@ data "aws_route_table" "jenkins_server_rt" {
 }
 
 
-# --- Kubernetes Provider Configuration (REMOVED FROM HERE - NOW ONLY IN providers.tf) ---
-
 # --- AWS Auth ConfigMap for Jenkins Admin Access ---
+# This explicitly creates or updates the 'aws-auth' ConfigMap in the 'kube-system' namespace.
+# It grants necessary IAM roles/users access to the Kubernetes cluster.
 resource "kubernetes_config_map_v1" "aws_auth" {
   metadata {
     name      = "aws-auth"
@@ -86,11 +86,9 @@ resource "kubernetes_config_map_v1" "aws_auth" {
 }
 
 
-# --- Helm Provider Configuration (REMOVED FROM HERE - NOW ONLY IN providers.tf) ---
-
-
-# --- UPDATED: AWS Load Balancer Controller Module ---
-# This module now uses its dedicated source from the Terraform Registry.
+# --- AWS Load Balancer Controller Module ---
+# This module deploys the AWS Load Balancer Controller (LBC) into your EKS cluster.
+# The LBC will dynamically provision ALBs based on your Kubernetes Ingress resources.
 module "aws_load_balancer_controller" {
   source  = "terraform-aws-modules/aws/aws-load-balancer-controller" # Corrected source
   version = "~> 1.0" # Specify a stable version, e.g., "~> 1.0" or "1.5.0"
@@ -114,6 +112,7 @@ module "aws_load_balancer_controller" {
 
 
 # --- Frontend Application Module ---
+# This module uses the generic 'app-helm-chart' module to deploy your frontend app.
 module "frontend_app" {
   source           = "../../modules/app-helm-chart"
   name             = "frontend"
