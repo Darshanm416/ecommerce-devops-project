@@ -10,9 +10,8 @@ containerPort: 5000
 resources: {}
 
 mongodb:
-  image:
-    repository: mongo
-    tag: "6.0.24"
+  image: mongo
+  tag: "6.0"
   port: 27017
   
 redis:
