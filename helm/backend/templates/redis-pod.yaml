@@ -7,6 +7,6 @@ metadata:
 spec:
   containers:
     - name: redis
-      image: {{ .Values.redis.image }}:{{ .Values.redis.tag }}
+      image: "{{ .Values.redis.image }}:{{ .Values.redis.tag }}"
       ports:
         - containerPort: {{ .Values.redis.port }}

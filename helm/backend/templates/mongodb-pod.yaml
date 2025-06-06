@@ -7,6 +7,6 @@ metadata:
 spec:
   containers:
     - name: mongo
-      image: {{ .Values.mongodb.image }}:{{ .Values.mongodb.tag }}
+      image: "{{ .Values.mongodb.image }}:{{ .Values.mongodb.tag }}"
       ports:
         - containerPort: {{ .Values.mongodb.port }}
