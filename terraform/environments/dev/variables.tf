@@ -36,3 +36,7 @@ variable "availability_zones" {
   type        = list(string)
   description = "List of availability zones to use"
 }
+
+variable "jenkins_route_table_ids" {
+  type = list(string)
+}
