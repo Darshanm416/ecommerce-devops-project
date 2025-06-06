@@ -12,7 +12,7 @@ resources: {}
 mongodb:
   image:
     repository: mongo
-    tag: "6.0"
+    tag: "6.0.24"
   port: 27017
   
 redis:
