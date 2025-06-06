@@ -1,31 +1,11 @@
-# modules/vpc/outputs.tf
-
 output "vpc_id" {
-  description = "The ID of the VPC."
-  value       = aws_vpc.main.id
-}
-
-output "vpc_cidr" {
-  description = "The CIDR block of the VPC."
-  value       = aws_vpc.main.cidr_block
+  value = aws_vpc.eks_vpc.id
 }
 
 output "public_subnet_ids" {
-  description = "List of IDs of the public subnets."
-  value       = aws_subnet.public[*].id
+  value = aws_subnet.public[*].id
 }
 
 output "private_subnet_ids" {
-  description = "List of IDs of the private subnets."
-  value       = aws_subnet.private[*].id
-}
-
-output "public_route_table_ids" {
-  description = "List of IDs of the public route tables."
-  value       = aws_route_table.public[*].id
-}
-
-output "private_route_table_ids" {
-  description = "List of IDs of the private route tables."
-  value       = aws_route_table.private[*].id
+  value = aws_subnet.private[*].id
 }

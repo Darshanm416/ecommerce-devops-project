@@ -1,62 +1,61 @@
-# modules/vpc/main.tf
-
-resource "aws_vpc" "main" {
-  cidr_block = var.vpc_cidr
-
-  enable_dns_hostnames = true # Recommended for EKS
-  enable_dns_support   = true # Recommended for EKS
+resource "aws_vpc" "eks_vpc" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
   tags = {
-    Name        = "${var.environment}-vpc"
-    Environment = var.environment
+    Name = "${var.project}-eks-vpc"
   }
 }
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.eks_vpc.id
 
   tags = {
-    Name = "${var.environment}-igw"
+    Name = "${var.project}-igw"
   }
 }
 
 resource "aws_eip" "nat" {
-  domain = "vpc" # Corrected from 'vpc = true'
+  vpc = true
 }
 
-resource "aws_nat_gateway" "nat" {
+resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id # Place NAT Gateway in the first public subnet
+  subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name = "${var.environment}-nat"
+    Name = "${var.project}-nat-gw"
   }
+
+  depends_on = [aws_internet_gateway.igw]
 }
 
-resource "aws_route_table" "private" {
-  count  = length(var.private_subnets)
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
+resource "aws_subnet" "public" {
+  count             = length(var.public_subnets)
+  vpc_id            = aws_vpc.eks_vpc.id
+  cidr_block        = var.public_subnets[count.index]
+  availability_zone = var.availability_zones[count.index]
+  map_public_ip_on_launch = true
 
   tags = {
-    Name        = "${var.environment}-private-rt-${count.index + 1}"
-    Environment = var.environment
+    Name = "${var.project}-public-subnet-${count.index + 1}"
   }
 }
 
-resource "aws_route_table_association" "private" {
-  count          = length(var.private_subnets)
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
+resource "aws_subnet" "private" {
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.eks_vpc.id
+  cidr_block        = var.private_subnets[count.index]
+  availability_zone = var.availability_zones[count.index]
+
+  tags = {
+    Name = "${var.project}-private-subnet-${count.index + 1}"
+  }
 }
 
-resource "aws_route_table" "public" {
-  count  = length(var.public_subnets)
-  vpc_id = aws_vpc.main.id
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.eks_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -64,40 +63,31 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name        = "${var.environment}-public-rt-${count.index + 1}"
-    Environment = var.environment
+    Name = "${var.project}-public-rt"
   }
 }
 
-resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnets)
+resource "aws_route_table_association" "public_assoc" {
+  count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public[count.index].id
+  route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_subnet" "public" {
-  count                   = length(var.public_subnets)
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.public_subnets[count.index]
-  availability_zone       = element(var.availability_zones, count.index)
-  map_public_ip_on_launch = true # Public subnets should have public IPs
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.eks_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
 
   tags = {
-    Name                                = "${var.environment}-public-${count.index + 1}"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared" # For EKS subnet discovery
-    "kubernetes.io/role/elb"            = "1"                # For ALB Controller to discover public subnets
+    Name = "${var.project}-private-rt"
   }
 }
 
-resource "aws_subnet" "private" {
-  count             = length(var.private_subnets)
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnets[count.index]
-  availability_zone = element(var.availability_zones, count.index)
-
-  tags = {
-    Name                                = "${var.environment}-private-${count.index + 1}"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared" # For EKS subnet discovery
-    "kubernetes.io/role/internal-elb"   = "1"                # For Internal ALB Controller to discover private subnets
-  }
+resource "aws_route_table_association" "private_assoc" {
+  count          = length(aws_subnet.private)
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private_rt.id
 }
