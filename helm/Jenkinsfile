@@ -94,14 +94,14 @@ pipeline {
                       name: letsencrypt-prod # Name the ClusterIssuer
                     spec:
                       acme:
-                        email: idarshankm@gmail.com # <--- **REPLACE WITH YOUR EMAIL ADDRESS**
+                        email: idarshankm@gmail.com
                         server: https://acme-v02.api.letsencrypt.org/directory
                         privateKeySecretRef:
                           name: letsencrypt-prod-account-key
                         solvers:
                         - dns01:
                             cloudflare:
-                              email: idarshankm@gmail.com # <--- **REPLACE WITH YOUR EMAIL ADDRESS**
+                              email: idarshankm@gmail.com
                               apiTokenSecretRef:
                                 name: cloudflare-api-token-secret
                                 key: api-token
