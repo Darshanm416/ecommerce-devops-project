@@ -1,17 +1,17 @@
-{{- if .Values.ingress.enabled -}}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: frontend-sears-ingress # <--- HARDCODED NAME
+  name: frontend-sears-ingress
   labels:
-    app.kubernetes.io/name: frontend-app # <--- SIMPLIFIED/HARDCODED LABEL
-    app.kubernetes.io/instance: frontend-release # <--- SIMPLIFIED/HARDCODED LABEL
-  {{- with .Values.ingress.annotations }}
+    app.kubernetes.io/name: frontend-app
+    app.kubernetes.io/instance: frontend-release
   annotations:
-    {{- toYaml . | nindent 8 }}
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-  {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
 
@@ -28,7 +28,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: frontend # This is correctly referencing your frontend Service name
+                name: frontend
                 port:
                   number: 80
 
@@ -36,7 +36,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: backend # This is correctly referencing your backend Service name
+                name: backend
                 port:
                   number: 80
 {{- end }}
