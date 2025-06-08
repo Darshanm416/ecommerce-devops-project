@@ -11,12 +11,11 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   {{- end }}
-spec:
-  ingressClassName: {{ .Values.ingress.className }}
-
+  spec:
+    ingressClassName: {{ .Values.ingress.className }}
   tls:
     - hosts:
-        - {{ .Values.global.domainName | quote }}
+      - {{ .Values.global.domainName | quote }}
       secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert
 
   rules:
