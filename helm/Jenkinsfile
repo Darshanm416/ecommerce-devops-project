@@ -109,9 +109,9 @@ spec:
                     sh "echo \"${clusterIssuerYaml}\" | kubectl apply -f -"
 // --- END OF THE CORRECTED BLOCK ---
                     echo "ClusterIssuer 'letsencrypt-prod' created."
-                }
-            }
-        }
+               }
+           }
+        }
         stage('Deploy Frontend') {
             steps {
                 script {
