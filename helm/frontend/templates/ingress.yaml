@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
-metadata:
+metadata: # This line (and all top-level keys like apiVersion, kind, spec) must start at column 1 (no leading spaces)
   name: {{ include "frontend.fullname" . }}-ingress
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
@@ -11,26 +11,27 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
   {{- end }}
-  spec:
-    ingressClassName: {{ .Values.ingress.className }}
-  tls:
-    - hosts:
-      - {{ .Values.global.domainName | quote }}
-      secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert
+spec: # <--- THIS LINE MUST START AT COLUMN 1 (no spaces before 'spec:')
+  ingressClassName: {{ .Values.ingress.className }} # <--- Indented 2 spaces from 'spec:'
 
-  rules:
-    - host: {{ .Values.global.domainName | quote }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend
-                port:
-                  number: 80
+  tls: # <--- Indented 2 spaces from 'spec:' (same level as 'ingressClassName:')
+    - hosts: # <--- Indented 4 spaces from 'spec:' (2 spaces from 'tls:')
+        - {{ .Values.global.domainName | quote }} # <--- Indented 6 spaces from 'spec:' (2 spaces from 'hosts:')
+      secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert # <--- Indented 6 spaces from 'spec:' (same level as '- hosts:')
 
-          - path: /api(/|$)(.*)
+  rules: # <--- Indented 2 spaces from 'spec:' (same level as 'ingressClassName:' and 'tls:')
+    - host: {{ .Values.global.domainName | quote }} # <--- Indented 4 spaces from 'spec:' (2 spaces from '- rules:')
+      http: # <--- Indented 6 spaces from 'spec:' (2 spaces from 'host:')
+        paths: # <--- Indented 8 spaces from 'spec:' (2 spaces from 'http:')
+          - path: / # <--- Indented 10 spaces from 'spec:' (2 spaces from 'paths:')
+            pathType: Prefix # <--- Indented 12 spaces from 'spec:' (2 spaces from '- path:')
+            backend: # <--- Indented 12 spaces from 'spec:' (same level as 'pathType:')
+              service: # <--- Indented 14 spaces from 'spec:' (2 spaces from 'backend:')
+                name: frontend # <--- Indented 16 spaces from 'spec:' (2 spaces from 'service:')
+                port: # <--- Indented 16 spaces from 'spec:' (same level as 'name:')
+                  number: 80 # <--- Indented 18 spaces from 'spec:' (2 spaces from 'port:')
+
+          - path: /api(/|$)(.*) # <--- Indented 10 spaces from 'spec:' (same level as '- path: /')
             pathType: Prefix
             backend:
               service:
