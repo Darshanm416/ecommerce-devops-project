@@ -86,32 +86,32 @@ pipeline {
                     """
 
                     echo "Creating ClusterIssuer for Let's Encrypt (DNS01 with Cloudflare)..."
-                    sh """
-                    cat <<EOF | kubectl apply -f -
-                    apiVersion: cert-manager.io/v1
-                    kind: ClusterIssuer
-                    metadata:
-                      name: letsencrypt-prod # Name the ClusterIssuer
-                    spec:
-                      acme:
-                        email: idarshankm@gmail.com
-                        server: https://acme-v02.api.letsencrypt.org/directory
-                        privateKeySecretRef:
-                          name: letsencrypt-prod-account-key
-                        solvers:
-                        - dns01:
-                            cloudflare:
-                              email: idarshankm@gmail.com
-                              apiTokenSecretRef:
-                                name: cloudflare-api-token-secret
-                                key: api-token
-                    EOF
-                    """
-                    echo "ClusterIssuer 'letsencrypt-prod' created."
-                }
-            }
-        }
+                    def clusterIssuerYaml = '''
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    email: idarshankm@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+    - dns01:
+        cloudflare:
+          email: idarshankm@gmail.com
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
+'''.stripIndent() // This is the crucial part that removes leading spaces from the YAML content
 
+                    sh "echo \"${clusterIssuerYaml}\" | kubectl apply -f -"
+                    // --- END OF THE CORRECTED BLOCK ---
+                    echo "ClusterIssuer 'letsencrypt-prod' created."
+                }
+            }
+        }
         stage('Deploy Frontend') {
             steps {
                 script {
