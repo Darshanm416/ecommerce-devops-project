@@ -1,47 +1,41 @@
-# helm/frontend/templates/ingress.yaml
-
 {{- if .Values.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "frontend.fullname" . }}-ingress # Generates a unique name like 'frontend-sears-ingress'
+  name: {{ include "frontend.fullname" . }}-ingress
   labels:
     {{- include "frontend.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 8 }}
-    cert-manager.io/cluster-issuer: letsencrypt-prod # <--- Reference your ClusterIssuer
-    nginx.ingress.kubernetes.io/ssl-redirect: "true" # Keep this to enforce HTTPS
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   {{- end }}
 spec:
-  # This field explicitly tells Kubernetes which IngressClass (controller) should handle this Ingress
   ingressClassName: {{ .Values.ingress.className }}
 
   tls:
-  - hosts:
-      - {{ .Values.global.domainName | quote }}
-    secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert # cert-manager will create this secret based on the domain name
+    - hosts:
+        - {{ .Values.global.domainName | quote }}
+      secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert
 
   rules:
-    # Rule for the main domain
-    - host: {{ .Values.global.domainName | quote }} # Uses the domain passed from Jenkins
+    - host: {{ .Values.global.domainName | quote }}
       http:
         paths:
-          # Path for the frontend application (root path)
           - path: /
-            pathType: Prefix # Matches paths starting with /
-            backend:
-              service:
-                name: frontend # Matches your frontend service name
-                port:
-                  number: 80 # Matches your frontend service port
-
-          # Path for the backend API
-          - path: /api(/|$)(.*) # Matches paths starting with /api/, captures the rest
             pathType: Prefix
             backend:
               service:
-                name: backend # This assumes your backend service is named 'backend'
+                name: frontend
                 port:
-                  number: 80 # This assumes your backend service is exposed on port 80
+                  number: 80
+
+          - path: /api(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 80
 {{- end }}
