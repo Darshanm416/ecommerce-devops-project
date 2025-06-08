@@ -8,3 +8,24 @@ image:
 containerPort: 80
 
 resources: {}
+
+ingress:
+  enabled: true # Set to true to enable the Ingress resource for this chart
+  className: nginx # Specifies that the Nginx Ingress Controller should handle this Ingress
+  annotations:
+    # Nginx Ingress Controller specific annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /$2 # This rewrites /api/users to /users for the backend
+     # Forces HTTP to HTTPS redirection
+    # Add any other annotations based on your needs, e.g., for WebSockets:
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS" # If your backend uses HTTPS internally
+
+  # Hosts and TLS secret are dynamically set from global values passed by Jenkins
+  # (These will be overwritten by --set in your Jenkins pipeline)
+  hosts:
+    - host: "yourdomain.com" # Placeholder: Will be replaced by global.domainName
+
+# Global values - these will be passed from your Jenkins pipeline using --set
+global:
+  domainName: "" # Default empty, will be set by Jenkins environment variable

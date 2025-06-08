@@ -1,54 +1,173 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    NAMESPACE = "sears"
-  }
-
-  stages {
-
-    stage('Checkout Source Code') {
-      steps {
-        git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
-      }
+    environment {
+        NAMESPACE = "sears"
+        DOMAIN_NAME = "darshanm.space" // Your actual domain
+        CLOUDFLARE_API_TOKEN_SECRET_NAME = "cloudflare-api-token" // Name of secret in AWS Secrets Manager
+        AWS_REGION = "us-east-1" // Your AWS region
     }
 
-    stage('Deploy Backend (includes MongoDB & Redis)') {
-      steps {
-        sh '''
-          helm upgrade --install backend ./helm/backend \
-            --namespace $NAMESPACE \
-            --create-namespace
-        '''
-      }
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
+            }
+        }
+
+        // REMOVED: The old "Create TLS Secret" stage is gone.
+
+        stage('Deploy Backend (includes MongoDB & Redis)') {
+            steps {
+                sh '''
+                helm upgrade --install backend ./helm/backend \
+                    --namespace $NAMESPACE \
+                    --create-namespace \
+                    --wait
+                '''
+            }
+        }
+
+        stage('Install Nginx Ingress Controller') {
+            steps {
+                script {
+                    echo "Adding Helm repo for Nginx Ingress Controller..."
+                    sh 'helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx'
+                    sh 'helm repo update'
+
+                    echo "Installing/Upgrading Nginx Ingress Controller..."
+                    sh 'helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace --set controller.service.type=LoadBalancer --set controller.service.externalTrafficPolicy=Local --wait'
+
+                    echo "Nginx Ingress Controller installed/upgraded."
+                    def ingressControllerEndpoint = sh(returnStdout: true, script: 'kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath=\'{.status.loadBalancer.ingress[0].ip}\' || kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath=\'{.status.loadBalancer.ingress[0].hostname}\'').trim()
+                    echo "Nginx Ingress Controller External Endpoint: ${ingressControllerEndpoint}"
+                    env.INGRESS_CONTROLLER_ENDPOINT = ingressControllerEndpoint
+                }
+            }
+        }
+
+        // NEW STAGE: Install cert-manager
+        stage('Install Cert-Manager') {
+            steps {
+                script {
+                    echo "Adding Helm repo for cert-manager..."
+                    sh 'helm repo add jetstack https://charts.jetstack.io'
+                    sh 'helm repo update'
+
+                    echo "Installing/Upgrading cert-manager..."
+                    // Apply CRDs first - crucial for cert-manager
+                    sh 'kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.5/cert-manager.crds.yaml'
+                    sh 'helm upgrade --install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.14.5 --wait'
+                    echo "cert-manager installed."
+                }
+            }
+        }
+
+        // NEW STAGE: Configure ClusterIssuer for Let's Encrypt with Cloudflare DNS01
+        stage('Configure ClusterIssuer') {
+            steps {
+                script {
+                    echo "Fetching Cloudflare API Token from AWS Secrets Manager..."
+                    sh 'sudo apt-get update && sudo apt-get install -y jq || true' # Ensure jq is installed
+                    def cfApiTokenJson = sh(returnStdout: true, script: """
+                        set +x
+                        aws secretsmanager get-secret-value --secret-id ${env.CLOUDFLARE_API_TOKEN_SECRET_NAME} --region ${env.AWS_REGION} --query SecretString --output text
+                        set -x
+                    """).trim()
+                    def cfApiToken = sh(returnStdout: true, script: "echo '${cfApiTokenJson}' | jq -r '.\"api-token\"'").trim()
+
+                    echo "Creating Kubernetes secret for Cloudflare API Token..."
+                    sh """
+                    kubectl create secret generic cloudflare-api-token-secret \\
+                      --from-literal=api-token=${cfApiToken} \\
+                      --namespace cert-manager \\
+                      --dry-run=client -o yaml | kubectl apply -f -
+                    """
+
+                    echo "Creating ClusterIssuer for Let's Encrypt (DNS01 with Cloudflare)..."
+                    sh """
+                    cat <<EOF | kubectl apply -f -
+                    apiVersion: cert-manager.io/v1
+                    kind: ClusterIssuer
+                    metadata:
+                      name: letsencrypt-prod # Name the ClusterIssuer
+                    spec:
+                      acme:
+                        email: idarshankm@gmail.com # <--- **REPLACE WITH YOUR EMAIL ADDRESS**
+                        server: https://acme-v02.api.letsencrypt.org/directory
+                        privateKeySecretRef:
+                          name: letsencrypt-prod-account-key
+                        solvers:
+                        - dns01:
+                            cloudflare:
+                              email: idarshankm@gmail.com # <--- **REPLACE WITH YOUR EMAIL ADDRESS**
+                              apiTokenSecretRef:
+                                name: cloudflare-api-token-secret
+                                key: api-token
+                    EOF
+                    """
+                    echo "ClusterIssuer 'letsencrypt-prod' created."
+                }
+            }
+        }
+
+        stage('Deploy Frontend') {
+            steps {
+                script {
+                    echo "Deploying/Upgrading Frontend Helm chart with Ingress..."
+                    sh """
+                    helm upgrade --install frontend ./helm/frontend \\
+                        --namespace $NAMESPACE \\
+                        --set global.domainName=${DOMAIN_NAME} \\
+                        --wait
+                    """
+                }
+            }
+        }
+
+        // Optional: Update DNS Records stage (if automated, otherwise manual after pipeline)
+        /*
+        stage('Update DNS Records') {
+            steps {
+                script {
+                    if (env.INGRESS_CONTROLLER_ENDPOINT) {
+                        echo "Updating DNS for ${env.DOMAIN_NAME} to ${env.INGRESS_CONTROLLER_ENDPOINT}"
+                        // Your DNS update logic (e.g., AWS CLI, Terraform)
+                        echo "DNS update command executed (manual verification required if not fully automated)."
+                    } else {
+                        echo "Ingress Controller Endpoint not found, skipping automated DNS update."
+                    }
+                }
+            }
+        }
+        */
+
+        stage('Cleanup Old Nginx Proxy') {
+            steps {
+                script {
+                    echo "Checking if old Nginx deployment exists..."
+                    def oldNginxDeployExists = sh(returnStatus: true, script: "kubectl get deployment nginx -n ${NAMESPACE} || true")
+                    if (oldNginxDeployExists == 0) {
+                        echo "Old Nginx Helm release 'nginx' found. Uninstalling..."
+                        sh "helm uninstall nginx --namespace ${NAMESPACE}"
+                        echo "Old Nginx proxy uninstalled."
+                    } else {
+                        echo "Old Nginx Helm release 'nginx' not found. Skipping cleanup."
+                    }
+                }
+            }
+        }
     }
 
-    stage('Deploy Frontend') {
-      steps {
-        sh '''
-          helm upgrade --install frontend ./helm/frontend \
-            --namespace $NAMESPACE
-        '''
-      }
+    post {
+        success {
+            echo "✅ All components deployed to EKS in namespace '$NAMESPACE'"
+            echo "Remember to update your DNS records for ${env.DOMAIN_NAME} to point to the Nginx Ingress Controller's external IP: ${env.INGRESS_CONTROLLER_ENDPOINT}"
+            echo "Certificates will be automatically issued and renewed by cert-manager."
+        }
+        failure {
+            echo "❌ Deployment failed. Please check the logs and Helm templates."
+        }
     }
-
-    stage('Deploy Nginx') {
-      steps {
-        sh '''
-          helm upgrade --install nginx ./helm/nginx \
-            --namespace $NAMESPACE
-        '''
-      }
-    }
-
-  }
-
-  post {
-    success {
-      echo "✅ All components deployed to EKS in namespace '$NAMESPACE'"
-    }
-    failure {
-      echo "❌ Deployment failed. Please check the logs and Helm templates."
-    }
-  }
 }
