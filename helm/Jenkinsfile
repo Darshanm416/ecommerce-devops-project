@@ -106,9 +106,9 @@ spec:
             key: api-token
 '''.stripIndent() // This is the crucial part that removes leading spaces from the YAML content
 
-                    sh "echo \"${clusterIssuerYaml}\" | kubectl apply -f -"
-                    // --- END OF THE CORRECTED BLOCK ---
-                    echo "ClusterIssuer 'letsencrypt-prod' created."
+sh "echo \"${clusterIssuerYaml}\" | kubectl apply -f -"
+// --- END OF THE CORRECTED BLOCK ---
+echo "ClusterIssuer 'letsencrypt-prod' created."
                 }
             }
         }
