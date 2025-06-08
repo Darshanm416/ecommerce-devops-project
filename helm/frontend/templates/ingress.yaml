@@ -20,7 +20,7 @@ spec:
   tls:
   - hosts:
     - {{ .Values.global.domainName | quote }}
-    secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert # cert-manager will create this secret based on the domain name
+  secretName: {{ .Values.global.domainName | replace "." "-" }}-tls-cert # cert-manager will create this secret based on the domain name
 
   rules:
     # Rule for the main domain
