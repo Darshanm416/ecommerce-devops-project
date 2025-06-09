@@ -39,7 +39,7 @@ pipeline {
         sh '''
           helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter \
             --namespace ${HELM_NAMESPACE} \
-            --set mongodb.uri="mongodb://mongo:27017/ecomdb" \
+            --set mongodb.uri="mongodb://mongo.mongodb.svc.cluster.local:27017/ecomdb"
             --set serviceMonitor.enabled=true \
             --set serviceMonitor.labels.release=monitoring \
             --wait
