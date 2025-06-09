@@ -1,0 +1,46 @@
+pipeline {
+  agent any
+
+  environment {
+    HELM_RELEASE_NAME = "monitoring"
+    HELM_NAMESPACE = "monitoring"
+    VALUES_FILE = "helm/monitoring/values-monitoring.yaml"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git url: 'https://github.com/Darshanm416/ecommerce-devops-project.git', branch: 'main'
+      }
+    }
+
+    stage('Add Helm Repo') {
+      steps {
+        sh '''
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+        '''
+      }
+    }
+
+    stage('Deploy Monitoring Stack') {
+      steps {
+        sh '''
+          helm upgrade --install ${HELM_RELEASE_NAME} prometheus-community/kube-prometheus-stack \
+            --namespace ${HELM_NAMESPACE} --create-namespace \
+            -f ${VALUES_FILE} \
+            --wait
+        '''
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "[SUCCESS] Monitoring stack deployed successfully!"
+    }
+    failure {
+      echo "[FAILURE] Monitoring deployment failed!"
+    }
+  }
+}
