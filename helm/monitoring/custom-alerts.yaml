@@ -4,7 +4,7 @@ metadata:
   name: sears-alert-rules
   namespace: monitoring
   labels:
-    release: monitoring
+    release: prometheus
     role: alert-rules
 spec:
   groups:

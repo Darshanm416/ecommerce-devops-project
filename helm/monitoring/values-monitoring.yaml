@@ -35,8 +35,13 @@ prometheus:
       - hosts:
           - prometheus.darshanm.space
         secretName: prometheus-darshanm-space-tls
-  additionalRuleYamlFiles:
-    - custom-alerts.yaml
+  prometheusSpec:
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector:
+      matchLabels:
+        role: alert-rules
+    additionalRuleYamlFiles:
+      - custom-alerts.yaml
 
 
 alertmanager:
