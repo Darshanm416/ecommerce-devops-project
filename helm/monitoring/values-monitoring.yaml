@@ -36,7 +36,7 @@ prometheus:
           - prometheus.darshanm.space
         secretName: prometheus-darshanm-space-tls
   additionalRuleYamlFiles:
-      - custom-alerts.yaml
+    - custom-alerts.yaml
 
 
 alertmanager:
