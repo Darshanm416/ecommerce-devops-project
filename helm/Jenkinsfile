@@ -144,21 +144,7 @@ spec:
         }
         */
 
-        stage('Cleanup Old Nginx Proxy') {
-            steps {
-                script {
-                    echo "Checking if old Nginx deployment exists..."
-                    def oldNginxDeployExists = sh(returnStatus: true, script: "kubectl get deployment nginx -n ${NAMESPACE} || true")
-                    if (oldNginxDeployExists == 0) {
-                        echo "Old Nginx Helm release 'nginx' found. Uninstalling..."
-                        sh "helm uninstall nginx --namespace ${NAMESPACE}"
-                        echo "Old Nginx proxy uninstalled."
-                    } else {
-                        echo "Old Nginx Helm release 'nginx' not found. Skipping cleanup."
-                    }
-                }
-            }
-        }
+        
     }
 
     post {
