@@ -1,0 +1,57 @@
+grafana:
+  adminUser: admin
+  adminPassword: admin
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - grafana.darshanm.space
+    path: /
+    pathType: Prefix
+    tls:
+      - hosts:
+          - grafana.darshanm.space
+        secretName: grafana-darshanm-space-tls
+
+prometheus:
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - prometheus.darshanm.space
+    path: /
+    pathType: Prefix
+    tls:
+      - hosts:
+          - prometheus.darshanm.space
+        secretName: prometheus-darshanm-space-tls
+
+alertmanager:
+  enabled: true
+  service:
+    type: ClusterIP
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - alertmanager.darshanm.space
+    path: /
+    pathType: Prefix
+    tls:
+      - hosts:
+          - alertmanager.darshanm.space
+        secretName: alertmanager-darshanm-space-tls
+
