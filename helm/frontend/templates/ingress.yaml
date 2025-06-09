@@ -1,4 +1,3 @@
-{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,9 +8,7 @@ metadata:
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    {{- with .Values.ingress.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    nginx.ingress.kubernetes.io/use-regex: "true"  # 🔥 Enables regex support!
 spec:
   ingressClassName: {{ .Values.ingress.className }}
 
@@ -33,10 +30,9 @@ spec:
                   number: 80
 
           - path: /api(/|$)(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific  # 🔥 Needed for regex paths
             backend:
               service:
                 name: backend
                 port:
                   number: 80
-{{- end }}
