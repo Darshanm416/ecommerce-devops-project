@@ -33,6 +33,28 @@ pipeline {
         '''
       }
     }
+
+     stage('Deploy MongoDB Exporter') {
+      steps {
+        sh '''
+          helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter \
+            --namespace ${HELM_NAMESPACE} \
+            --set mongodb.uri="mongodb://mongodb:27017" \
+            --wait
+        '''
+      }
+    }
+
+    stage('Deploy Redis Exporter') {
+      steps {
+        sh '''
+          helm upgrade --install redis-exporter prometheus-community/prometheus-redis-exporter \
+            --namespace ${HELM_NAMESPACE} \
+            --set redisAddress=redis://redis-master:6379 \
+            --wait
+        '''
+      }
+    }
   }
 
   post {
