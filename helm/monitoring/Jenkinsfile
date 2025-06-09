@@ -40,6 +40,8 @@ pipeline {
           helm upgrade --install mongodb-exporter prometheus-community/prometheus-mongodb-exporter \
             --namespace ${HELM_NAMESPACE} \
             --set mongodb.uri="mongodb://mongo:27017/ecomdb" \
+            --set serviceMonitor.enabled=true \
+            --set serviceMonitor.labels.release=monitoring \
             --wait
         '''
       }
@@ -51,6 +53,8 @@ pipeline {
           helm upgrade --install redis-exporter prometheus-community/prometheus-redis-exporter \
             --namespace ${HELM_NAMESPACE} \
             --set redisAddress=redis://redis-master:6379 \
+            --set serviceMonitor.enabled=true \
+            --set serviceMonitor.labels.release=monitoring \
             --wait
         '''
       }
