@@ -47,6 +47,7 @@ spec:
           labels:
             severity: critical
             team: platform
+            alert_type: infrastructure
           annotations:
             summary: "Kubernetes Node Not Ready: {{ $labels.node }}"
             description: "Kubernetes node {{ $labels.node }} has been in a NotReady state for 5 minutes."
