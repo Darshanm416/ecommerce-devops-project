@@ -39,7 +39,6 @@ prometheus:
     ruleSelectorNilUsesHelmValues: false
     ruleSelector:
       matchLabels:
-        role: alert-rules
         release: prometheus
     
 
