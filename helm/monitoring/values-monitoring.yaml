@@ -40,8 +40,8 @@ prometheus:
     ruleSelector:
       matchLabels:
         role: alert-rules
-    additionalRuleYamlFiles:
-      - custom-alerts.yaml
+        release: prometheus
+    
 
 
 alertmanager:
