@@ -76,9 +76,9 @@ alertmanager:
       receivers:
         - name: 'email-receiver'
           email_configs:
-            - to: 'poohn416@gmail.com' # REPLACE
+            - to: 'poohn416@gmail.com'
               from: 'idarshankm@gmail.com' # REPLACE
-              smarthost: 'smtp.gmail.com:587' # REPLACE
+              smarthost: 'smtp.gmail.com:465' # REPLACE
               auth_username: 'idarshankm@gmail.com' # REPLACE
               auth_password: 'xmua mdvh abfw iqdc' # REPLACE
               send_resolved: true
