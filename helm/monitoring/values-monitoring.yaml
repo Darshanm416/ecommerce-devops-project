@@ -35,35 +35,9 @@ prometheus:
       - hosts:
           - prometheus.darshanm.space
         secretName: prometheus-darshanm-space-tls
-  prometheusSpec:
-    ruleSelectorNilUsesHelmValues: false
-    ruleSelector:
-      matchLabels:
-        release: prometheus
-    
-
 
 alertmanager:
   enabled: true
-  config:
-    global:
-      smtp_smarthost: 'smtp.gmail.com:587'
-      smtp_from: 'idarshankm@gmail.com'
-      smtp_auth_username: 'idarshankm@gmail.com'
-      smtp_auth_password: '${SMTP_PASS}'  # ENV variable injected below
-    route:
-      receiver: email-alert
-    receivers:
-      - name: email-alert
-        email_configs:
-          - to: 'idarshankm@gmail.com'
-            send_resolved: true
-  extraEnv:
-    - name: SMTP_PASS
-      valueFrom:
-        secretKeyRef:
-          name: alertmanager-config
-          key: smtp_pass
   service:
     type: ClusterIP
   ingress:
