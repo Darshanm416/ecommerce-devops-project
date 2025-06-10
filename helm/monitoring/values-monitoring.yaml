@@ -35,6 +35,14 @@ prometheus:
       - hosts:
           - prometheus.darshanm.space
         secretName: prometheus-darshanm-space-tls
+    prometheusSpec:
+    # This section tells Prometheus where to send its alerts (to Alertmanager)
+    alerting:
+      alertmanagers:
+      - namespace: monitoring # IMPORTANT: Use the actual namespace where Alertmanager is deployed
+        name: alertmanager-main # Default name for Alertmanager service in kube-prometheus-stack
+        port: web
+        scheme: http
 
 alertmanager:
   enabled: true
@@ -54,4 +62,26 @@ alertmanager:
       - hosts:
           - alertmanager.darshanm.space
         secretName: alertmanager-darshanm-space-tls
+  alertmanagerSpec:
+    template:
+      config: |
+        global:
+          resolve_timeout: 5m
 
+        route:
+          receiver: 'email-receiver'
+          group_by: ['alertname', 'cluster', 'service']
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 1h
+
+        receivers:
+          - name: 'email-receiver'
+            email_configs:
+              - to: 'poohn416@gmail.com' # REPLACE
+                from: 'idarshankm@gmail.com' # REPLACE
+                smarthost: 'smtp.gmail.com:587' # REPLACE
+                auth_username: 'idarshankm@gmail.com' # REPLACE
+                auth_password: 'xmua mdvh abfw iqdc' # REPLACE
+                send_resolved: true
+                require_tls: true

@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: general-application-alerts # A descriptive name for this rule group
+  namespace: monitoring # IMPORTANT: This must be the namespace where Prometheus is deployed by your Helm chart
+  labels:
+    release: monitoring # IMPORTANT: This label must match the 'release' label of your Prometheus Helm chart deployment. Check your helm release name!
+spec:
+  groups:
+    - name: application.rules # Name of the rule group within this file
+      rules:
+        - alert: HighRequestLatency
+          expr: histogram_quantile(0.99, rate(http_requests_duration_seconds_bucket[5m])) > 0.5
+          for: 1m
+          labels:
+            severity: critical
+            app: backend # Add app-specific labels for routing/context
+          annotations:
+            summary: "High request latency detected on {{ $labels.instance }} for {{ $labels.app }}"
+            description: "The 99th percentile of request latency is consistently above 0.5 seconds for 1 minute on instance {{ $labels.instance }} of app {{ $labels.app }}."
+
+        - alert: ServiceDown
+          expr: up == 0
+          for: 2m
+          labels:
+            severity: critical
+            team: devops # Label for the responsible team
+          annotations:
+            summary: "Service down: {{ $labels.job }}/{{ $labels.instance }}"
+            description: "{{ $labels.job }} on {{ $labels.instance }} is down."
+
+    - name: infrastructure.rules # Another rule group in the same file or a separate one
+      rules:
+        - alert: HostCPUUtilizationHigh
+          expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 5m
+          labels:
+            severity: warning
+            team: infra
+          annotations:
+            summary: "High CPU utilization on {{ $labels.instance }}"
+            description: "CPU utilization on host {{ $labels.instance }} has been above 80% for 5 minutes."
+
+        - alert: KubernetesNodeNotReady
+          expr: kube_node_status_condition{condition="Ready", status="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Kubernetes Node Not Ready: {{ $labels.node }}"
+            description: "Kubernetes node {{ $labels.node }} has been in a NotReady state for 5 minutes."

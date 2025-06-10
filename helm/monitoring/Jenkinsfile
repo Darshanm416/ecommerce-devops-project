@@ -5,6 +5,7 @@ pipeline {
     HELM_RELEASE_NAME = "monitoring"
     HELM_NAMESPACE = "monitoring"
     VALUES_FILE = "helm/monitoring/values-monitoring.yaml"
+     PROMETHEUS_RULES_FILE = "helm/monitoring/my-custom-prometheus-rules.yaml"
   }
 
   stages {
@@ -52,11 +53,16 @@ pipeline {
         sh '''
           helm upgrade --install redis-exporter prometheus-community/prometheus-redis-exporter \
             --namespace ${HELM_NAMESPACE} \
-            --set redisAddress=redis://redis-master:6379 \
+            --set redisAddress=redis://redis.sears.svc.cluster.local:6379 \
             --set serviceMonitor.enabled=true \
             --set serviceMonitor.labels.release=monitoring \
             --wait
         '''
+      }
+    }
+    stage('Deploy Custom Prometheus Rules') {
+      steps {
+        sh "kubectl apply -f ${PROMETHEUS_RULES_FILE} -n ${HELM_NAMESPACE}"
       }
     }
   }
